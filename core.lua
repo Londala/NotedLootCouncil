@@ -290,7 +290,7 @@ function NotedLootCouncil:CHAT_MSG_ADDON(event, arg1, arg2, arg3, arg4)
         self:Print("Chat recieved in correct channel")
         self:Print(arg2)
     elseif arg1 == nlc_local_syncprefix then
-        self:Print(arg2)
+        self:GetSyncItems(arg2)
     elseif arg1 == nlc_local_selectprefix then
         self:Print("select")
         self:Print(arg2)
@@ -305,12 +305,21 @@ function NotedLootCouncil:CHAT_MSG_ADDON(event, arg1, arg2, arg3, arg4)
 end
 
 function NotedLootCouncil:SendAddonMsg(str)
-    C_ChatInfo.SendAddonMessage(nlc_local_prefix, str, "WHISPER", UnitName("player"))
+    C_ChatInfo.SendAddonMessage(nlc_local_prefix, str, getChatType(false))
 end
 
 function NotedLootCouncil:SyncItems()
     for k,item in pairs(self.lootCache) do
-        C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, item, "WHISPER", UnitName("player"))
+        C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, item, getChatType(false))
+    end
+    C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "END SYNC", getChatType(false))
+end
+
+function NotedLootCouncil:GetSyncItems(msg)
+    if msg == "END SYNC" then
+        self:buildSessionInfo()
+    else
+        table.insert(self.lootCache, msg)
     end
 end
 
@@ -318,14 +327,14 @@ function NotedLootCouncil:SendSelection(idx, item, equipedItem)
     local _, playerClass = UnitClass("player")
     local str = idx .. "=" .. item .. "=" .. equipedItem .. "=" .. playerClass
     NotedLootCouncil:Debug(str)
-    C_ChatInfo.SendAddonMessage(nlc_local_selectprefix, str, "WHISPER", UnitName("player"))
+    C_ChatInfo.SendAddonMessage(nlc_local_selectprefix, str, getChatType(false))
 end
 
 function NotedLootCouncil:SendVote(itemLink, player)
     print("vote")
     local str = itemLink .. "=" .. player
     NotedLootCouncil:Debug("Vote: " .. str)
-    C_ChatInfo.SendAddonMessage(nlc_local_voteprefix, str, "WHISPER", UnitName("player"))
+    C_ChatInfo.SendAddonMessage(nlc_local_voteprefix, str, getChatType(false))
 end
 
 function NotedLootCouncil:GetVote(msg, sender)
@@ -334,24 +343,12 @@ function NotedLootCouncil:GetVote(msg, sender)
     for str in string.gmatch(msg, "([^"..sep.."]+)") do
             table.insert(t, str)
     end
-
     self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"][sender] = true
-
     local votes = 0
     for i, k in pairs(self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"]) do
         votes = votes + 1
     end
-
     self.sessionInfo[t[1]]["selections"][t[2]]["votes"] = votes
-    -- for j, itemInfo in pairs(self.sessionInfo) do
-    --     if itemInfo["link"] == itemLink then
-    --         for k, selectionInfo in pairs(itemInfo["selections"]) do
-    --             if selectionInfo["name"] == player do
-    --                 selectionInfo["votes"] = selectionInfo["votes"] + 1
-    --             end
-    --         end
-    --     end
-    -- end
 end
 
 -------------------------------------------------------------------------
@@ -844,6 +841,7 @@ function NotedLootCouncil:toggleDebug(info, newValue)
 end
 
 function NotedLootCouncil:buildSessionInfo()
+    self:Debug("Building Session Info")
     for k,itemLink in pairs(self.lootCache) do
         local item = _G.Item:CreateFromItemLink(itemLink)
 
