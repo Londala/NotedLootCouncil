@@ -1,8 +1,8 @@
 ## Interface: 30400
-## Title: Noted Loot List
+## Title: Noted Loot Council
 ## Author: Londala (Vinheim-Benediction)
 ## Version: 0.0.1
-## SavedVariables: NLL_DB
+## SavedVariables: NLC_DB
 
 embeds.xml
 core.lua

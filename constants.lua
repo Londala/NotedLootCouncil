@@ -1,7 +1,7 @@
 
 
 -- Boss Items
-nll_constants.sscItemDict = {
+nlc_constants.sscItemDict = {
     ["Hydross the Unstable"] = {
         30056,
         32516,
@@ -114,4 +114,4 @@ nll_constants.sscItemDict = {
     }
 };
 
-nll_constants.filetst = "file test";
+nlc_constants.filetst = "file test";
