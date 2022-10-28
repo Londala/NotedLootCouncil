@@ -1,7 +1,7 @@
 -------------------------------------------------------------------------
 --
 -- Copyright (c) 2022 by Alex Londal.
--- Vinheim of Benediction (NA East) - WoW Classic Alliance
+-- Vinheim-Benediction (NA East) - WoW Classic Alliance
 --
 -- Noted Loot Council may be distributed to anyone WITHOUT ANY WARRANTY
 -- Please make backups of your loot lists. The author is not
@@ -10,12 +10,9 @@
 -------------------------------------------------------------------------
 
 
-
 -------------------------------------------------------------------------
 -- Addon Variables
 -------------------------------------------------------------------------
-
-
 
 -- Globals
 NotedLootCouncil = LibStub("AceAddon-3.0"):NewAddon("NotedLootCouncil", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0")
@@ -27,7 +24,6 @@ local _G = getfenv(0)
 
 -- Addon Information
 local nlc_local_version = "0.0.1"
-
 
 
 local nlc_local_ldb = LibStub("LibDataBroker-1.1")
@@ -50,7 +46,13 @@ local nlc_local_commandprefix = "NLC_Command"
 local nlc_local_realmKey = GetRealmName()
 local nlc_local_toonKey = UnitName("player") .. "-" .. nlc_local_realmKey
 local nlc_local_toonInGuild = IsInGuild()
-local nlc_local_guildName, nlc_local_guildRank, nlc_local_guildRankIndex = (function() if nlc_local_toonInGuild then return GetGuildInfo("player") else return nil, nil, nil end end)
+local nlc_local_guildName, nlc_local_guildRank, nlc_local_guildRankIndex = (function()
+    if nlc_local_toonInGuild then
+        return GetGuildInfo("player")
+    else
+        return nil, nil, nil
+    end
+end)
 
 -- Banned Loot
 local bannedItems = {}
@@ -133,7 +135,6 @@ local nlc_options = {
             type = "input",
             get = "GetTestMessage",
             set = "SetTestMessage",
-            
         },
         link_loot = {
             name = "Link Loot",
@@ -141,7 +142,6 @@ local nlc_options = {
             type = "toggle",
             get = "isLinkLoot",
             set = "toggleLinkLoot",
-            
         },
         debug_mode = {
             name = "Debug Mode",
@@ -162,7 +162,7 @@ function NotedLootCouncil:OnInitialize()
     self.db = LibStub("AceDB-3.0"):New("NLC_DB", defaults, true)
 
     LibStub("AceConfig-3.0"):RegisterOptionsTable("NotedLootCouncil", nlc_options, nil)
-    
+
     self.optionsFrame = LibStub("AceConfigDialog-3.0"):AddToBlizOptions("NotedLootCouncil"):SetParent(InterfaceOptionsFramePanelContainer)
 
     -- Local Unsaved vars
@@ -248,21 +248,14 @@ function NotedLootCouncil:getBossItems(boss)
         item:ContinueOnItemLoad(function()
             local link = item:GetItemLink()
             local level = item:GetCurrentItemLevel()
-            NotedLootCouncil:Print("Item "..n..": "..link.." ("..level..")") -- "Red Winter Hat", 133169
+            NotedLootCouncil:Print("Item "..n..": "..link.." ("..level..")")
         end)
     end
 end
 
 -------------------------------------------------------------------------
--- Event: OnCommReceived
+-- Event: CHAT_MSG_ADDON
 -------------------------------------------------------------------------
-function NotedLootCouncil:OnCommReceived(prefix, message, distribution, sender)
-    self:Debug("Comm Recieved")
-    self:Debug(prefix)
-    self:Debug(message)
-    self:Debug(distribution)
-    self:Debug(sender)
-end
 
 function NotedLootCouncil:GetSelection(msg, player)
     local sep = "="
@@ -287,15 +280,10 @@ end
 
 function NotedLootCouncil:CHAT_MSG_ADDON(event, arg1, arg2, arg3, arg4)
     if arg1 == nlc_local_prefix then
-        self:Print("Chat recieved in correct channel")
-        self:Print(arg2)
+        self:Debug("Chat recieved in correct channel")
     elseif arg1 == nlc_local_syncprefix then
         self:GetSyncItems(arg2)
     elseif arg1 == nlc_local_selectprefix then
-        self:Print("select")
-        self:Print(arg2)
-        self:Print(arg3)
-        self:Print(arg4)
         self:GetSelection(arg2,arg4)
     elseif arg1 == nlc_local_versionprefix then
         self:Print("v0.0.1")
@@ -331,7 +319,6 @@ function NotedLootCouncil:SendSelection(idx, item, equipedItem)
 end
 
 function NotedLootCouncil:SendVote(itemLink, player)
-    print("vote")
     local str = itemLink .. "=" .. player
     NotedLootCouncil:Debug("Vote: " .. str)
     C_ChatInfo.SendAddonMessage(nlc_local_voteprefix, str, getChatType(false))
@@ -341,7 +328,7 @@ function NotedLootCouncil:GetVote(msg, sender)
     local sep = "="
     local t={}
     for str in string.gmatch(msg, "([^"..sep.."]+)") do
-            table.insert(t, str)
+        table.insert(t, str)
     end
     self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"][sender] = true
     local votes = 0
@@ -453,6 +440,7 @@ end
 -------------------------------------------------------------------------
 -- COUNCIL FRAME
 -------------------------------------------------------------------------
+
 function NotedLootCouncil:OpenCouncilFrame()
     local itemTabs = {}
     for k,itemInfo in pairs(self.sessionInfo) do
@@ -474,11 +462,11 @@ function NotedLootCouncil:OpenCouncilFrame()
         local itemContainer = AceGUI:Create("SimpleGroup")
         itemContainer:SetLayout("Flow")
         itemContainer:SetRelativeWidth(1.0)
-        
+
         local item = _G.Item:CreateFromItemLink(itemTable["link"])
 
         local icon = ""
-        item:ContinueOnItemLoad(function() 
+        item:ContinueOnItemLoad(function()
             icon = item:GetItemIcon()
         end)
 
@@ -507,7 +495,7 @@ function NotedLootCouncil:OpenCouncilFrame()
         scrollcontainer:SetFullHeight(true) -- probably?
         scrollcontainer:SetLayout("Fill") -- important!
         container:AddChild(scrollcontainer)
-        
+
         local scroll = AceGUI:Create("ScrollFrame")
         scroll:SetLayout("Flow")
         scrollcontainer:AddChild(scroll)
@@ -530,8 +518,6 @@ function NotedLootCouncil:OpenCouncilFrame()
             [15] = {}
         }
         for k,opts in pairs(itemTable["selections"]) do
-            print(k)
-            print(opts)
             local selectContainer = AceGUI:Create("SimpleGroup")
             selectContainer:SetLayout("Flow")
             selectContainer:SetFullWidth(true)
@@ -559,10 +545,8 @@ function NotedLootCouncil:OpenCouncilFrame()
             end
             playerSelect:SetText(selectionLabel)
             playerSelect:SetWidth(100)
-            
 
             local item = _G.Item:CreateFromItemLink(opts["equiped"])
-
 
             local icon = ""
             item:ContinueOnItemLoad(function()
@@ -575,7 +559,7 @@ function NotedLootCouncil:OpenCouncilFrame()
             itemWidget:SetImageSize(16,16)
             itemWidget:SetWidth(32)
             itemWidget:SetHeight(24)
-            
+
             itemWidget:SetCallback("OnEnter", function()
                 GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
                 GameTooltip:SetHyperlink(opts["equiped"])
@@ -600,9 +584,6 @@ function NotedLootCouncil:OpenCouncilFrame()
             local nme = opts["name"]
 
             voteButton:SetCallback("OnClick", function()
-                print("vote")
-                print(lnk)
-                print(nme)
                 NotedLootCouncil:SendVote(lnk, nme)
             end)
 
@@ -632,24 +613,19 @@ function NotedLootCouncil:OpenCouncilFrame()
         end
     end
 
-    
-    
     local currentGroup = ""
     -- Callback function for OnGroupSelected
     local function SelectGroup(container, event, group)
         container:ReleaseChildren()
-        print("group")
-        print(group)
         currentGroup = group
         DrawItemGroup(container, currentGroup)
     end
-    
 
     -- Create the frame container
     local frame = AceGUI:Create("Frame")
     frame:SetTitle("Noted Loot Council")
     frame:SetStatusText("Loot Council: OK")
-    
+
     -- Fill Layout - the TabGroup widget will fill the whole frame
     frame:SetLayout("Fill")
 
@@ -678,6 +654,7 @@ end
 -------------------------------------------------------------------------
 -- LOOT FRAME
 -------------------------------------------------------------------------
+
 function NotedLootCouncil:OpenLootFrame()
     local frame = AceGUI:Create("Frame")
     frame:SetTitle("Noted Loot Council")
@@ -695,7 +672,7 @@ function NotedLootCouncil:OpenLootFrame()
         local itemContainer = AceGUI:Create("SimpleGroup")
         itemContainer:SetLayout("Flow")
         itemContainer:SetRelativeWidth(1.0)
-        
+
         NotedLootCouncil:Debug(_G.GetItemCount(itemLink))
 
         local item = _G.Item:CreateFromItemLink(itemLink)
@@ -767,7 +744,6 @@ function NotedLootCouncil:HandleSlashCommands(input)
     elseif input:trim() == "options" then
         InterfaceOptionsFrame_OpenToCategory("NotedLootCouncil")
     elseif input:trim() == "test" then
-        NotedLootCouncil:Print(NotedLootCouncil:GetTestMessage())
         table.insert(self.lootCache, "\124cffa335ee\124Hitem:40396::::::::80:::::\124h[The Turning Tide]\124h\124r")
         table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
         table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
@@ -786,12 +762,12 @@ function NotedLootCouncil:HandleSlashCommands(input)
         NotedLootCouncil:OpenLootFrame()
         -- NotedLootCouncil:getBossItems("Morogrim Tidewalker")
     elseif input:trim() == "synctest" then
-        NotedLootCouncil:Print("syncing")
+        NotedLootCouncil:Print("Syncing...")
         self:SendAddonMsg("hello world")
     elseif input:trim() == "sync" then
         self:SyncItems()
     elseif input:trim() == "cache" then
-        NotedLootCouncil:Print("cache")
+        NotedLootCouncil:Print("Cache:")
         for k,v in pairs(self.lootCache) do
             NotedLootCouncil:Print(v)
         end
@@ -848,16 +824,9 @@ function NotedLootCouncil:buildSessionInfo()
         NotedLootCouncil:Debug(itemLink)
 
         local name = ""
-        local icon = ""
-        local color = ""
-        local slot = ""
 
         item:ContinueOnItemLoad(function()
             name = item:GetItemName()
-            icon = item:GetItemIcon()
-            color = item:GetItemQualityColor()
-            slot = item:GetInventoryTypeName()
-            print(name, icon, color, slot) -- "Red Winter Hat", 133169
         end)
 
         self.sessionInfo[itemLink] = {
