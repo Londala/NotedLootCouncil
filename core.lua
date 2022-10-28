@@ -25,7 +25,6 @@ local _G = getfenv(0)
 -- Addon Information
 local nlc_local_version = "0.0.1"
 
-
 local nlc_local_ldb = LibStub("LibDataBroker-1.1")
 local nlc_broker = nil
 local nlc_local_minimapicon = LibStub("LibDBIcon-1.0")
@@ -40,7 +39,6 @@ local nlc_local_selectprefix = "NLC_Select"
 local nlc_local_voteprefix = "NLC_Vote"
 
 local nlc_local_commandprefix = "NLC_Command"
-
 
 -- Toon Info
 local nlc_local_realmKey = GetRealmName()
@@ -182,13 +180,11 @@ end
 -------------------------------------------------------------------------
 
 function NotedLootCouncil:OnEnable()
-
     C_ChatInfo.RegisterAddonMessagePrefix(nlc_local_prefix)
 	C_ChatInfo.RegisterAddonMessagePrefix(nlc_local_versionprefix)
     C_ChatInfo.RegisterAddonMessagePrefix(nlc_local_selectprefix)
     C_ChatInfo.RegisterAddonMessagePrefix(nlc_local_syncprefix)
     C_ChatInfo.RegisterAddonMessagePrefix(nlc_local_voteprefix)
-
 
     self:RegisterEvent("CHAT_MSG_ADDON")
     self:RegisterEvent("LOOT_READY")
@@ -260,6 +256,25 @@ function NotedLootCouncil:getBossItems(boss)
     end
 end
 
+function NotedLootCouncil:GenTest()
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:40396::::::::80:::::\124h[The Turning Tide]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
+    table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:40348::::::::80:::::\124h[Damnation]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:39766::::::::80:::::\124h[Matriarch's Spawn]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:40255::::::::80:::::\124h[Dying Curse]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:39199::::::::80:::::\124h[Watchful Eye]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:40396::::::::80:::::\124h[The Turning Tide]\124h\124r")
+    table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
+    table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
+    self.lootSelectOptions = {"BiS", "Upgrade", "Alt Bis", "Alt Upgrade", "OS/PVP", "Pass"}
+    for i,s in ipairs(self.lootSelectOptions) do
+        self:Debug(s)
+    end
+    self:buildSessionInfo()
+    NotedLootCouncil:OpenLootFrame()
+end
+
 -------------------------------------------------------------------------
 -- Event: CHAT_MSG_ADDON
 -------------------------------------------------------------------------
@@ -308,7 +323,7 @@ function NotedLootCouncil:GetSelection(msg, player)
     local sep = "="
     local t={}
     for str in string.gmatch(msg, "([^"..sep.."]+)") do
-            table.insert(t, str)
+        table.insert(t, str)
     end
     self:Debug(t[1])
     self:Debug(t[2])
@@ -330,6 +345,7 @@ function NotedLootCouncil:GetVote(msg, sender)
         table.insert(t, str)
     end
     self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"][sender] = true
+    
     local votes = 0
     for i, k in pairs(self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"]) do
         votes = votes + 1
@@ -738,27 +754,11 @@ end
 
 function NotedLootCouncil:HandleSlashCommands(input)
     if not input or input:trim() == "" then
-        NotedLootCouncil:Debug("TODO: Open Interface")
         NotedLootCouncil:OpenLootFrame()
     elseif input:trim() == "options" then
         InterfaceOptionsFrame_OpenToCategory("NotedLootCouncil")
     elseif input:trim() == "test" then
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:40396::::::::80:::::\124h[The Turning Tide]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
-        table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:40348::::::::80:::::\124h[Damnation]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:39766::::::::80:::::\124h[Matriarch's Spawn]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:40255::::::::80:::::\124h[Dying Curse]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:39199::::::::80:::::\124h[Watchful Eye]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:40396::::::::80:::::\124h[The Turning Tide]\124h\124r")
-        table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
-        table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
-        self.lootSelectOptions = {"BiS", "Upgrade", "Alt Bis", "Alt Upgrade", "OS/PVP", "Pass"}
-        for i,s in ipairs(self.lootSelectOptions) do
-            self:Debug(s)
-        end
-        self:buildSessionInfo()
-        NotedLootCouncil:OpenLootFrame()
+        self:GenTest()
         -- NotedLootCouncil:getBossItems("Morogrim Tidewalker")
     elseif input:trim() == "synctest" then
         NotedLootCouncil:Print("Syncing...")
@@ -774,7 +774,6 @@ function NotedLootCouncil:HandleSlashCommands(input)
         self.lootCache = {}
         NotedLootCouncil:Print("Loot Reset")
     elseif input:trim() == "vote" then
-        NotedLootCouncil:Debug("TODO: Vote Interface")
         NotedLootCouncil:OpenLootFrame()
     else
         local _, _, cmd, args = string.find(input, "%s?(%w+)%s?(.*)")
