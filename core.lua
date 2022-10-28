@@ -60,7 +60,7 @@ local bannedItems = {}
 -- Defaults
 local defaults = {
     profile = {
-        testMsg = "This is the default test message",
+        selectOptions = "BiS,Upgrade,Alt Bis,Alt Upgrade,OS/PVP,Pass",
         linkLoot = true,
         debugMode = false,
     },
@@ -129,12 +129,12 @@ local nlc_options = {
     desc = "Options for Noted Loot Council",
     type = "group",
     args = {
-        test_message = {
-            name = "Test Message",
-            desc = "The message output in testing",
+        selectOptions = {
+            name = "Loot Select Options",
+            desc = "A comma seperated string of loot select options",
             type = "input",
-            get = "GetTestMessage",
-            set = "SetTestMessage",
+            get = "GetSelectOptions",
+            set = "SetSelectOptions",
         },
         link_loot = {
             name = "Link Loot",
@@ -174,7 +174,7 @@ function NotedLootCouncil:OnInitialize()
     self.lootCache = {}
     self.lootSelectOptions = {}
     self.sessionInfo = {}
-    self.lootSelectOptions = {"BiS", "Upgrade", "Alt Bis", "Alt Upgrade", "OS/PVP", "Pass"}
+    NotedLootCouncil:parseLootSelectOptions()
 end
 
 -------------------------------------------------------------------------
@@ -221,6 +221,13 @@ end
 -- Misc Helpers
 -------------------------------------------------------------------------
 
+function NotedLootCouncil:parseLootSelectOptions()
+    local opts = self:GetSelectOptions()
+    for str in string.gmatch(opts, "([^"..",".."]+)") do
+        table.insert(self.lootSelectOptions, str)
+    end
+end
+
 local function GUIDtoID(guid)
 	local type,_,serverID,instanceID,zoneUID,id,spawnID = strsplit("-", guid or "")
 	return tonumber(id or 0)
@@ -256,27 +263,6 @@ end
 -------------------------------------------------------------------------
 -- Event: CHAT_MSG_ADDON
 -------------------------------------------------------------------------
-
-function NotedLootCouncil:GetSelection(msg, player)
-    local sep = "="
-    local t={}
-    for str in string.gmatch(msg, "([^"..sep.."]+)") do
-            table.insert(t, str)
-    end
-    self:Debug(t[1])
-    self:Debug(t[2])
-    self:Debug(t[3])
-    self:Debug(player)
-    self.sessionInfo[t[2]]["selections"][player] = {selection=tonumber(t[1]), name=player, equiped=t[3], votes=0, voteSet={}, class=t[4]}
-end
-
--- function NotedLootCouncil:GetSelection(msg, player)
---     local sep = "="
---     local t={}
---     for str in string.gmatch(msg, "([^"..sep.."]+)") do
---         table.insert(t, str)
---     end
--- end
 
 function NotedLootCouncil:CHAT_MSG_ADDON(event, arg1, arg2, arg3, arg4)
     if arg1 == nlc_local_prefix then
@@ -316,6 +302,19 @@ function NotedLootCouncil:SendSelection(idx, item, equipedItem)
     local str = idx .. "=" .. item .. "=" .. equipedItem .. "=" .. playerClass
     NotedLootCouncil:Debug(str)
     C_ChatInfo.SendAddonMessage(nlc_local_selectprefix, str, getChatType(false))
+end
+
+function NotedLootCouncil:GetSelection(msg, player)
+    local sep = "="
+    local t={}
+    for str in string.gmatch(msg, "([^"..sep.."]+)") do
+            table.insert(t, str)
+    end
+    self:Debug(t[1])
+    self:Debug(t[2])
+    self:Debug(t[3])
+    self:Debug(player)
+    self.sessionInfo[t[2]]["selections"][player] = {selection=tonumber(t[1]), name=player, equiped=t[3], votes=0, voteSet={}, class=t[4]}
 end
 
 function NotedLootCouncil:SendVote(itemLink, player)
@@ -792,12 +791,13 @@ function NotedLootCouncil:HandleSlashCommands(input)
     end
 end
 
-function NotedLootCouncil:GetTestMessage(info)
-    return self.db.char.message
+function NotedLootCouncil:GetSelectOptions(info)
+    return self.db.char.selectOptions
 end
 
-function NotedLootCouncil:SetTestMessage(info, newValue)
-    self.db.char.message = newValue
+function NotedLootCouncil:SetSelectOptions(info, newValue)
+    self.db.char.selectOptions = newValue
+    NotedLootCouncil:parseLootSelectOptions()
 end
 
 function NotedLootCouncil:isLinkLoot(info)
