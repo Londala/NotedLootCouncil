@@ -679,27 +679,32 @@ function NotedLootCouncil:OpenCouncilFrame()
 
     -- Fill Layout - the TabGroup widget will fill the whole frame
     frame:SetLayout("Fill")
+    if #self.lootCache > 0 then
+        -- Create the TabGroup
+        local tab =  AceGUI:Create("TabGroup")
+        tab:SetLayout("Flow")
+        -- Setup which tabs to show
+        -- tab:SetTabs({{text="Tab 1", value="tab1"}, {text="Tab 2", value="tab2"}})
+        tab:SetTabs(itemTabs)
+        -- Register callback
 
-    -- Create the TabGroup
-    local tab =  AceGUI:Create("TabGroup")
-    tab:SetLayout("Flow")
-    -- Setup which tabs to show
-    -- tab:SetTabs({{text="Tab 1", value="tab1"}, {text="Tab 2", value="tab2"}})
-    tab:SetTabs(itemTabs)
-    -- Register callback
-    tab:SetCallback("OnGroupSelected", SelectGroup)
-    -- Set initial Tab (this will fire the OnGroupSelected callback)
-    -- tab:SelectTab("tab1")
-    tab:SelectTab(itemTabs[1]["value"])
+        tab:SetCallback("OnGroupSelected", SelectGroup)
 
-    -- add to the frame container
-    frame:AddChild(tab)
-    local mytimer = _G.C_Timer.NewTicker(2.0, function()
-        tab:ReleaseChildren()
-        DrawItemGroup(tab, currentGroup)
-    end)
+        -- Set initial Tab (this will fire the OnGroupSelected callback)
+        -- tab:SelectTab("tab1")
+        tab:SelectTab(itemTabs[1]["value"])
 
-    frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget); mytimer:Cancel() end)
+        -- add to the frame container
+        frame:AddChild(tab)
+        local mytimer = _G.C_Timer.NewTicker(2.0, function()
+            tab:ReleaseChildren()
+            DrawItemGroup(tab, currentGroup)
+        end)
+        frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget); mytimer:Cancel() end)
+    else
+        frame:SetStatusText("Loot Council: No Items Found")
+        frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
+    end
 end
 
 -------------------------------------------------------------------------
