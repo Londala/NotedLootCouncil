@@ -15,7 +15,7 @@
 -------------------------------------------------------------------------
 
 -- Globals
-NotedLootCouncil = LibStub("AceAddon-3.0"):NewAddon("NotedLootCouncil", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0")
+NotedLootCouncil = LibStub("AceAddon-3.0"):NewAddon("NotedLootCouncil", "AceConsole-3.0", "AceEvent-3.0", "AceComm-3.0", "AceTimer-3.0")
 
 nlc_constants = {}; -- Saved Loot Lists, Tooltips
 local AceGUI = LibStub("AceGUI-3.0")
@@ -387,8 +387,23 @@ function NotedLootCouncil:FindItemInInventory(itemLink)
 end
 
 function NotedLootCouncil:TRADE_SHOW(event)
+    self.isTrading = true
     self.tradeTarget = _G.UnitName("NPC")
     print(tradeTarget)
+
+    if self.awardedItems[self.tradeTarget] == nil then
+        self:Print("No items to trade "..self.tradeTarget)
+        return
+    end
+
+    for k, item in pairs(self.awardedItems[self.tradeTarget]) do
+        local bag, slot = self:FindItemInInventory(item)
+        self:ScheduleTimer(function()
+            _G.ClearCursor()
+            _G.PickupContainerItem(bag, slot)
+            _G.ClickTradeButton(k)
+        end, 0.1)
+    end
 end
 
 -------------------------------------------------------------------------
@@ -576,7 +591,7 @@ function NotedLootCouncil:OpenCouncilFrame()
             selectContainer:SetFullWidth(true)
 
             local playerName = AceGUI:Create("Label")
-            
+
             local tempName = trimmedName(opts["name"])
 
             local playerClass = opts["class"]
