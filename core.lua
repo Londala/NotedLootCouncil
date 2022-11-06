@@ -118,6 +118,10 @@ function NotedLootCouncil:OnInitialize()
 
     self.lootCache = {}
     self.sessionInfo = {}
+    self.awardedItems = {}
+
+    self.tradeTarget = ""
+    self.isTrading = false
 
     self.lootSelectOptions = {}
     if self.db.char.selectOptions == nil then
@@ -146,6 +150,7 @@ function NotedLootCouncil:OnEnable()
     self:RegisterEvent("LOOT_READY")
     self:RegisterEvent("LOOT_SLOT_CLEARED")
     self:RegisterEvent("LOOT_CLOSED")
+    self:RegisterEvent("TRADE_SHOW")
     -- self:RegisterEvent("BAG_UPDATE")
 
     self:Print("|cffff00ff[Noted Loot Council]|r Enabled")
@@ -324,12 +329,18 @@ function NotedLootCouncil:SendVote(itemLink, player)
 end
 
 function NotedLootCouncil:AwardItem(itemLink, player)
+    if self.awardedItems[player] == nil then
+        self.awardedItems[player] = {}
+    end
+
+    table.insert(self.awardedItems[player], itemLink)
+
     local chat_type, playerName = getChatType(false, true)
     local msg = ""..itemLink.." awarded to "..trimmedName(player).."."
     -- TODO: Make chat_type 
     print(msg)
     print(chat_type)
-    SendChatMessage(msg, chat_type, nil,playerName)
+    SendChatMessage(msg, chat_type, nil, playerName)
 end
 
 function NotedLootCouncil:GetVote(msg, sender)
@@ -350,6 +361,34 @@ end
 function NotedLootCouncil:SendSessionInfo()
     C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "OPTIONS:"..self.db.char.selectOptions, getChatType(false, false))
     C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "SESSION START", getChatType(false, false))
+end
+
+-------------------------------------------------------------------------
+-- Item Management
+-------------------------------------------------------------------------
+
+function NotedLootCouncil:FindItemInInventory(itemLink)
+    print(itemLink)
+    local itemName, _ = _G.GetItemInfo(itemLink)
+    print(itemName)
+    for bag = 0,4 do
+        for slot = 1,_G.GetContainerNumSlots(bag) do
+            local item = _G.GetContainerItemLink(bag,slot)
+            if item then
+                print(itemLink.." = ".. item)
+                if item:find(itemName) then
+                    print(bag.." "..slot)
+                    return bag, slot
+                end
+            end
+        end
+    end
+    return nil, nil
+end
+
+function NotedLootCouncil:TRADE_SHOW(event)
+    self.tradeTarget = _G.UnitName("NPC")
+    print(tradeTarget)
 end
 
 -------------------------------------------------------------------------
@@ -777,6 +816,9 @@ function NotedLootCouncil:HandleSlashCommands(input)
         if cmd == "add" and args ~= "" then
             self:Debug("adding " .. args)
             table.insert(self.lootCache, args)
+        elseif cmd == "find" and args ~= "" then
+            self:Debug("finding " .. args)
+            self:Print(self:FindItemInInventory(args))
         elseif cmd == "session" and args == "end" then
             self:StartSession()
         elseif cmd == "session" then
