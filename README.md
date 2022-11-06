@@ -15,7 +15,7 @@ WIP
 
 `/nlc session <arg>`
 - `start` - starts a voting session (or reopens the voting frame if it was closed)
-- `end` - starts an awarding session
+- `end` - ends a voting session
 - `reset` - resets all voting and item caches
 
 `/nlc add <item_link>` - adds the linked item to the session.
