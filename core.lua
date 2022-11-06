@@ -330,11 +330,12 @@ function NotedLootCouncil:SendVote(itemLink, player)
 end
 
 function NotedLootCouncil:AwardItem(itemLink, player)
-    if self.awardedItems[player] == nil then
-        self.awardedItems[player] = {}
+    local trim = trimmedName(player)
+    if self.awardedItems[trim] == nil then
+        self.awardedItems[trim] = {}
     end
 
-    table.insert(self.awardedItems[player], itemLink)
+    table.insert(self.awardedItems[trim], itemLink)
 
     local chat_type, playerName = getChatType(false, true)
     local msg = ""..itemLink.." awarded to "..trimmedName(player).."."
