@@ -454,7 +454,7 @@ function NotedLootCouncil:LOOT_READY(event)
 			if linkAnyway then
 				local itemLink =  GetLootSlotLink(i)
 				local _, itemName, itemQuantity, _, quality = GetLootSlotInfo(i)
-				if itemLink and (quality and quality >= 0) then
+				if itemLink and (quality and quality >= 2) then
 					local itemID = itemLink:match("item:(%d+)")
 					if not itemID or not bannedItems[itemID] then
 						numLink = numLink + 1
