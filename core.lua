@@ -863,12 +863,12 @@ function NotedLootCouncil:HandleSlashCommands(input)
         NotedLootCouncil:OpenLootFrame()
     elseif input:trim() == "options" then
         InterfaceOptionsFrame_OpenToCategory("NotedLootCouncil")
-    elseif input:trim() == "test" then
-        self:GenTest()
-        -- NotedLootCouncil:getBossItems("Morogrim Tidewalker")
-    elseif input:trim() == "synctest" then
-        NotedLootCouncil:Print("Syncing...")
-        self:SendAddonMsg("hello world")
+    -- elseif input:trim() == "test" then
+    --     self:GenTest()
+    --     -- NotedLootCouncil:getBossItems("Morogrim Tidewalker")
+    -- elseif input:trim() == "synctest" then
+    --     NotedLootCouncil:Print("Syncing...")
+    --     self:SendAddonMsg("hello world")
     elseif input:trim() == "sync" then
         self:SyncItems()
     elseif input:trim() == "cache" then
