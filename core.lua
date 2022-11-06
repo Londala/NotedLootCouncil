@@ -64,59 +64,6 @@ local defaults = {
     },
 }
 
-local inv_types = {
-    ["head"] = 1,
-    ["neck"] = 2,
-    ["shoulder"] = 3,
-    ["chest"] = 5,
-    ["waist"] = 6,
-    ["legs"] = 7,
-    ["feet"] = 8,
-    ["wrist"] = 9,
-    ["hands"] = 10,
-    ["ring1"] = 11,
-    ["ring2"] = 12,
-    ["trinket1"] = 13,
-    ["trinket2"] = 14,
-    ["back"] = 15,
-    ["mainhand"] = 16,
-    ["offhand"] = 17,
-    ["wand"] = 18,
-}
-
-local invTypeToSlot = {
-    [""] = 0,
-    ["INVTYPE_RANGEDRIGHT"] 		= 18,
-    ["INVTYPE_SHIELD"] 				= 17,
-    ["INVTYPE_RANGED"] 				= 0,
-    ["INVTYPE_WEAPON"] 				= 16,
-    ["INVTYPE_2HWEAPON"] 			= 16,
-    ["INVTYPE_WRIST"]				= 9,
-    ["INVTYPE_TRINKET"]				= 13,
-    ["INVTYPE_ROBE"]				= 5,
-    ["INVTYPE_CLOAK"]				= 15,
-    ["INVTYPE_HEAD"]				= 1,
-    ["INVTYPE_HOLDABLE"]			= 18,
-    ["INVTYPE_CHEST"]				= 5,
-    ["INVTYPE_NECK"]				= 2,
-    ["INVTYPE_TABARD"]				= 19,
-    ["INVTYPE_LEGS"]				= 7,
-    ["INVTYPE_HAND"]				= 10,
-    ["INVTYPE_WAIST"]				= 6,
-    ["INVTYPE_FEET"]				= 8,
-    ["INVTYPE_SHOULDER"]			= 3,
-    ["INVTYPE_FINGER"]				= 11,
-    ["INVTYPE_BAG"]					= 0,
-    ["INVTYPE_AMMO"]				= 0,
-    ["INVTYPE_BODY"]				= 4, -- Shirt
-    ["INVTYPE_QUIVER"]				= 0,
-    ["INVTYPE_RELIC"]				= 18,
-    ["INVTYPE_THROWN"]				= 18,
-    ["INVTYPE_WEAPONMAINHAND"] 		= 16,
-    ["INVTYPE_WEAPONMAINHAND_PET"]	= 16,	-- "Main Attack"
-    ["INVTYPE_WEAPONOFFHAND"]		= 17,
-}
-
 -------------------------------------------------------------------------
 -- Options
 -------------------------------------------------------------------------
@@ -129,7 +76,7 @@ local nlc_options = {
     args = {
         selectOptions = {
             name = "Loot Select Options",
-            desc = "A comma seperated string of loot select options",
+            desc = "The loot options players can select.\nSeperated by commas.\nDefaults:BiS, Upgrade, Alt Bis, Alt Upgrade, OS/PVP, Pass",
             type = "input",
             get = "GetSelectOptions",
             set = "SetSelectOptions",
@@ -170,9 +117,18 @@ function NotedLootCouncil:OnInitialize()
     self:RegisterChatCommand("nlc", "HandleSlashCommands")
 
     self.lootCache = {}
-    self.lootSelectOptions = {}
     self.sessionInfo = {}
+
+    self.lootSelectOptions = {}
+    if self.db.char.selectOptions == nil then
+        self.db.char.selectOptions = "BiS, Upgrade, Alt Bis, Alt Upgrade, OS/PVP, Pass"
+    end
     NotedLootCouncil:parseLootSelectOptions()
+
+    -- player related vars
+    self.playerInfo = {}
+    _, self.playerInfo["class"] = _G.UnitClass("player")
+    self.playerInfo["name"], self.playerInfo["realm"] = _G.UnitName("player")
 end
 
 -------------------------------------------------------------------------
@@ -218,9 +174,11 @@ end
 -------------------------------------------------------------------------
 
 function NotedLootCouncil:parseLootSelectOptions()
-    local opts = self:GetSelectOptions()
+    self.lootSelectOptions = {}
+    local opts = self.db.char.selectOptions
+    print(opts)
     for str in string.gmatch(opts, "([^"..",".."]+)") do
-        table.insert(self.lootSelectOptions, str)
+        table.insert(self.lootSelectOptions, str:trim())
     end
 end
 
@@ -229,17 +187,40 @@ local function GUIDtoID(guid)
 	return tonumber(id or 0)
 end
 
-local function getChatType(toSay)
+local function trimmedName(name)
+    local t = {}
+    for str in string.gmatch(name, "([^".."-".."]+)") do
+        table.insert(t, str)
+    end
+    return t[1]
+end
+
+local function unitIsLeadOrAssist(unit)
+    return (_G.UnitIsGroupLeader(unit) or _G.UnitIsGroupAssistant(unit))
+end
+
+local function canUseItem(itemLink)
+
+end
+
+-------------------------------------------------------------------------
+-- Chat Helpers
+-------------------------------------------------------------------------
+
+local function getChatType(toSay, toRW)
 	local isInInstance = IsInGroup(LE_PARTY_CATEGORY_INSTANCE)
 	local isInParty = IsInGroup()
 	local isInRaid = IsInRaid()
 	local playerName = nil
 	local chat_type = (isInInstance and "INSTANCE_CHAT") or (isInRaid and "RAID") or (isInParty and "PARTY")
-	if not chat_type and not toSay then
+
+    if not chat_type and not toSay then
 		chat_type = "WHISPER"
-		playerName = UnitName("player") 
+		playerName = NotedLootCouncil.playerInfo["name"]
 	elseif not chat_type then
 		chat_type = "SAY"
+    elseif isInRaid and toRW and unitIsLeadOrAssist("player") then
+        return "RAID_WARNING", playerName
 	end
 	return chat_type, playerName
 end
@@ -267,7 +248,8 @@ function NotedLootCouncil:GenTest()
     table.insert(self.lootCache, "\124cffa335ee\124Hitem:40396::::::::80:::::\124h[The Turning Tide]\124h\124r")
     table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
     table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
-    self.lootSelectOptions = {"BiS", "Upgrade", "Alt Bis", "Alt Upgrade", "OS/PVP", "Pass"}
+    self.db.char.selectOptions = "BiS,Upgrade,Alt Bis,Alt Upgrade,OS/PVP,Pass"
+    self:parseLootSelectOptions()
     for i,s in ipairs(self.lootSelectOptions) do
         self:Debug(s)
     end
@@ -294,14 +276,14 @@ function NotedLootCouncil:CHAT_MSG_ADDON(event, arg1, arg2, arg3, arg4)
 end
 
 function NotedLootCouncil:SendAddonMsg(str)
-    C_ChatInfo.SendAddonMessage(nlc_local_prefix, str, getChatType(false))
+    C_ChatInfo.SendAddonMessage(nlc_local_prefix, str, getChatType(false, false))
 end
 
 function NotedLootCouncil:SyncItems()
     for k,item in pairs(self.lootCache) do
-        C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, item, getChatType(false))
+        C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, item, getChatType(false, false))
     end
-    C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "END SYNC", getChatType(false))
+    C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "END SYNC", getChatType(false, false))
 end
 
 function NotedLootCouncil:GetSyncItems(msg)
@@ -313,10 +295,9 @@ function NotedLootCouncil:GetSyncItems(msg)
 end
 
 function NotedLootCouncil:SendSelection(idx, item, equipedItem)
-    local _, playerClass = UnitClass("player")
-    local str = idx .. "=" .. item .. "=" .. equipedItem .. "=" .. playerClass
+    local str = idx .. "=" .. item .. "=" .. equipedItem .. "=" .. self.playerInfo.class
     NotedLootCouncil:Debug(str)
-    C_ChatInfo.SendAddonMessage(nlc_local_selectprefix, str, getChatType(false))
+    C_ChatInfo.SendAddonMessage(nlc_local_selectprefix, str, getChatType(false, false))
 end
 
 function NotedLootCouncil:GetSelection(msg, player)
@@ -335,7 +316,16 @@ end
 function NotedLootCouncil:SendVote(itemLink, player)
     local str = itemLink .. "=" .. player
     NotedLootCouncil:Debug("Vote: " .. str)
-    C_ChatInfo.SendAddonMessage(nlc_local_voteprefix, str, getChatType(false))
+    C_ChatInfo.SendAddonMessage(nlc_local_voteprefix, str, getChatType(false, false))
+end
+
+function NotedLootCouncil:AwardItem(itemLink, player)
+    local chat_type, playerName = getChatType(false, true)
+    local msg = ""..itemLink.." awarded to "..trimmedName(player).."."
+    -- TODO: Make chat_type 
+    print(msg)
+    print(chat_type)
+    SendChatMessage(msg, chat_type, nil,playerName)
 end
 
 function NotedLootCouncil:GetVote(msg, sender)
@@ -345,7 +335,7 @@ function NotedLootCouncil:GetVote(msg, sender)
         table.insert(t, str)
     end
     self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"][sender] = true
-    
+
     local votes = 0
     for i, k in pairs(self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"]) do
         votes = votes + 1
@@ -381,7 +371,7 @@ function NotedLootCouncil:LOOT_READY(event)
 
 	local cache = {}
 	local numLink = 0
-	local chat_type, playerName = getChatType()
+	local chat_type, playerName = getChatType(false, false)
 	for i=1,count do
 		local sourceGUID = GetLootSourceInfo(i)
 		if sourceGUID then
@@ -538,11 +528,8 @@ function NotedLootCouncil:OpenCouncilFrame()
             selectContainer:SetFullWidth(true)
 
             local playerName = AceGUI:Create("Label")
-            local t = {}
-            for str in string.gmatch(opts["name"], "([^".."-".."]+)") do
-                table.insert(t, str)
-            end
-            local tempName = t[1]
+            
+            local tempName = trimmedName(opts["name"])
 
             local playerClass = opts["class"]
             local _, _, _, color = _G.GetClassColor(playerClass)
@@ -610,6 +597,7 @@ function NotedLootCouncil:OpenCouncilFrame()
 
             awardButton:SetCallback("OnClick", function()
                 print("award")
+                NotedLootCouncil:AwardItem(lnk, nme)
             end)
 
             selectContainer:AddChild(playerName)
@@ -731,7 +719,7 @@ function NotedLootCouncil:OpenLootFrame()
                     w["wid"]:SetText(w["text"])
                 end
                 optButton:SetText("|cffff00ff".. opt .."|r")
-                local equipSlot = invTypeToSlot[slot]
+                local equipSlot = nlc_constants.invTypeToSlot[slot]
                 local equipedItem = GetInventoryItemLink("player", equipSlot)
                 NotedLootCouncil:Debug(i)
                 NotedLootCouncil:Debug(itemLink)
@@ -795,6 +783,7 @@ function NotedLootCouncil:GetSelectOptions(info)
 end
 
 function NotedLootCouncil:SetSelectOptions(info, newValue)
+    print(newValue)
     self.db.char.selectOptions = newValue
     NotedLootCouncil:parseLootSelectOptions()
 end
