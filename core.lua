@@ -397,17 +397,23 @@ function NotedLootCouncil:TRADE_SHOW(event)
         return
     end
 
+    local numTraded = 1
     for k, item in pairs(self.awardedItems[self.tradeTarget]) do
         local bag, slot = self:FindItemInInventory(item)
-        self:ScheduleTimer(function()
-            _G.ClearCursor()
-            _G.PickupContainerItem(bag, slot)
-            _G.ClickTradeButton(k)
-        end, 0.1)
+        if bag ~= nil and slot ~= nil then
+            if numTraded <= 7 then
+                self:ScheduleTimer(function()
+                    _G.ClearCursor()
+                    _G.PickupContainerItem(bag, slot)
+                    _G.ClickTradeButton(numTraded)
+                end, 0.1)
+            end
+        end
     end
 end
 
 function NotedLootCouncil:TRADE_CLOSED(event)
+    _G.ClearCursor()
     self.isTrading = false
     self.tradeTarget = ""
 end
