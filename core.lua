@@ -123,7 +123,7 @@ function NotedLootCouncil:OnInitialize()
     if self.db.char.selectOptions == nil then
         self.db.char.selectOptions = "BiS, Upgrade, Alt Bis, Alt Upgrade, OS/PVP, Pass"
     end
-    NotedLootCouncil:parseLootSelectOptions()
+    NotedLootCouncil:parseLootSelectOptions(self.db.char.selectOptions)
 
     -- player related vars
     self.playerInfo = {}
@@ -173,11 +173,10 @@ end
 -- Misc Helpers
 -------------------------------------------------------------------------
 
-function NotedLootCouncil:parseLootSelectOptions()
+function NotedLootCouncil:parseLootSelectOptions(optsStr)
     self.lootSelectOptions = {}
-    local opts = self.db.char.selectOptions
-    print(opts)
-    for str in string.gmatch(opts, "([^"..",".."]+)") do
+    print(optsStr)
+    for str in string.gmatch(optsStr, "([^"..",".."]+)") do
         table.insert(self.lootSelectOptions, str:trim())
     end
 end
@@ -249,7 +248,7 @@ function NotedLootCouncil:GenTest()
     table.insert(self.lootCache, "\124cffa335ee\124Hitem:44661::::::::80:::::\124h[Wyrmrest Necklace of Power]\124h\124r")
     table.insert(self.lootCache, "\124cffff8000\124Hitem:19019::::::::80:::::\124h[Thunderfury, Blessed Blade of the Windseeker]\124h\124r")
     self.db.char.selectOptions = "BiS,Upgrade,Alt Bis,Alt Upgrade,OS/PVP,Pass"
-    self:parseLootSelectOptions()
+    self:parseLootSelectOptions(self.db.char.selectOptions)
     for i,s in ipairs(self.lootSelectOptions) do
         self:Debug(s)
     end
@@ -289,6 +288,11 @@ end
 function NotedLootCouncil:GetSyncItems(msg)
     if msg == "END SYNC" then
         self:buildSessionInfo()
+    elseif msg == "SESSION START" then
+        self:OpenLootFrame()
+    elseif string.find(msg, "OPTIONS") then
+        local opts = string.sub(msg, 9, -1)
+        self:parseLootSelectOptions(opts)
     else
         table.insert(self.lootCache, msg)
     end
@@ -341,6 +345,11 @@ function NotedLootCouncil:GetVote(msg, sender)
         votes = votes + 1
     end
     self.sessionInfo[t[1]]["selections"][t[2]]["votes"] = votes
+end
+
+function NotedLootCouncil:SendSessionInfo()
+    C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "OPTIONS:"..self.db.char.selectOptions, getChatType(false, false))
+    C_ChatInfo.SendAddonMessage(nlc_local_syncprefix, "SESSION START", getChatType(false, false))
 end
 
 -------------------------------------------------------------------------
@@ -785,7 +794,7 @@ end
 function NotedLootCouncil:SetSelectOptions(info, newValue)
     print(newValue)
     self.db.char.selectOptions = newValue
-    NotedLootCouncil:parseLootSelectOptions()
+    NotedLootCouncil:parseLootSelectOptions(newValue)
 end
 
 function NotedLootCouncil:isLinkLoot(info)
@@ -827,6 +836,8 @@ function NotedLootCouncil:buildSessionInfo()
 end
 
 function NotedLootCouncil:StartSession()
+    self:SyncItems()
+    self:SendSessionInfo()
     self:buildSessionInfo()
     self:OpenCouncilFrame()
 end
