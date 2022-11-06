@@ -8,5 +8,8 @@ Link Loot - Links all Rare+ loot in raid chat
 Debug Mode - Toggles on all debug output (dont use unless developing or errors show up)
 
 ## Commands
+
+WIP
+
 `/nlc`
 - Opens the loot council selection panel
