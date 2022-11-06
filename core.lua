@@ -876,9 +876,9 @@ function NotedLootCouncil:HandleSlashCommands(input)
         for k,v in pairs(self.lootCache) do
             NotedLootCouncil:Print(v)
         end
-    elseif input:trim() == "reset" then
-        self.lootCache = {}
-        NotedLootCouncil:Print("Loot Reset")
+    -- elseif input:trim() == "reset" then
+    --     self.lootCache = {}
+    --     NotedLootCouncil:Print("Loot Reset")
     elseif input:trim() == "vote" then
         NotedLootCouncil:OpenLootFrame()
     else
