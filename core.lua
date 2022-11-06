@@ -537,11 +537,13 @@ function NotedLootCouncil:OpenCouncilFrame()
 
     -- function that draws the widgets for each tab
     local function DrawItemGroup(container, itemInfo)
+        container:ReleaseChildren()
         local itemTable = self.sessionInfo[itemInfo]
 
         local itemContainer = AceGUI:Create("SimpleGroup")
         itemContainer:SetLayout("Flow")
         itemContainer:SetRelativeWidth(1.0)
+        itemContainer:SetCallback("OnClose", function(widget) widget:ReleaseChildren(); AceGUI:Release(widget) end)
 
         local item = _G.Item:CreateFromItemLink(itemTable["link"])
 
@@ -681,11 +683,13 @@ function NotedLootCouncil:OpenCouncilFrame()
             selectContainer:AddChild(playerVotes)
             selectContainer:AddChild(voteButton)
             selectContainer:AddChild(awardButton)
+            selectContainer:SetCallback("OnClose", function(widget) widget:ReleaseChildren(); AceGUI:Release(widget) end)
             table.insert(selectionWidgets[selectIdx], selectContainer)
         end
 
         for i, t in pairs(selectionWidgets) do
-            for j, cont in pairs(t) do 
+            for j, cont in pairs(t) do
+                cont:SetCallback("OnClose", function(widget) widget:ReleaseChildren(); AceGUI:Release(widget) end)
                 scroll:AddChild(cont)
             end
         end
@@ -727,7 +731,11 @@ function NotedLootCouncil:OpenCouncilFrame()
             tab:ReleaseChildren()
             DrawItemGroup(tab, currentGroup)
         end)
-        frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget); mytimer:Cancel() end)
+
+        local garbageTimer = _G.C_Timer.NewTicker(30.0, function()
+            collectgarbage("collect")
+        end)
+        frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget); mytimer:Cancel(); garbageTimer:Cancel(); collectgarbage("collect") end)
     else
         frame:SetStatusText("Loot Council: No Items Found")
         frame:SetCallback("OnClose", function(widget) AceGUI:Release(widget) end)
