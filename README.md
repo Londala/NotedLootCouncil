@@ -11,5 +11,14 @@ Debug Mode - Toggles on all debug output (dont use unless developing or errors s
 
 WIP
 
-`/nlc`
-- Opens the loot council selection panel
+`/nlc` - Opens the loot selection panel (mainly used by general raiders)
+
+`/nlc session <arg>`
+- `start` - starts a voting session (or reopens the voting frame if it was closed)
+- `end` - ends a voting session
+- `reset` - resets all voting and item caches
+
+`/nlc add <item_link>` - adds the linked item to the session.
+
+`/nlc cache` - prints out all the items in the session cache
+
