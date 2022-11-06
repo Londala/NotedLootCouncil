@@ -123,6 +123,8 @@ function NotedLootCouncil:OnInitialize()
     self.tradeTarget = ""
     self.isTrading = false
 
+    self.sessionRunning = false
+
     self.lootSelectOptions = {}
     if self.db.char.selectOptions == nil then
         self.db.char.selectOptions = "BiS, Upgrade, Alt Bis, Alt Upgrade, OS/PVP, Pass"
@@ -202,6 +204,10 @@ end
 
 local function unitIsLeadOrAssist(unit)
     return (_G.UnitIsGroupLeader(unit) or _G.UnitIsGroupAssistant(unit))
+end
+
+local function isOnLootCouncil(unit)
+    return (not _G.IsInGroup() or unitIsLeadOrAssist(unit))
 end
 
 local function canUseItem(itemLink)
@@ -295,6 +301,7 @@ function NotedLootCouncil:GetSyncItems(msg)
     if msg == "END SYNC" then
         self:buildSessionInfo()
     elseif msg == "SESSION START" then
+        self.sessionRunning = true
         self:OpenLootFrame()
     elseif string.find(msg, "OPTIONS") then
         local opts = string.sub(msg, 9, -1)
@@ -333,6 +340,14 @@ function NotedLootCouncil:AwardItem(itemLink, player)
     local trim = trimmedName(player)
     if self.awardedItems[trim] == nil then
         self.awardedItems[trim] = {}
+    end
+
+    for p, t in pairs(self.awardedItems) do
+        for i, item in pairs(t) do
+            if item == itemLink then
+                table.remove(self.awardedItems[p], i)
+            end
+        end
     end
 
     table.insert(self.awardedItems[trim], itemLink)
@@ -523,6 +538,9 @@ end
 -------------------------------------------------------------------------
 
 function NotedLootCouncil:OpenCouncilFrame()
+    if not isOnLootCouncil("player") then
+        return
+    end
     local itemTabs = {}
     for k,itemInfo in pairs(self.sessionInfo) do
         local itemLink = itemInfo["link"]
@@ -672,6 +690,14 @@ function NotedLootCouncil:OpenCouncilFrame()
 
             awardButton:SetHeight(32)
             awardButton:SetWidth(100)
+
+            if self.awardedItems[trimmedName(nme)] ~= nil then
+                for p, item in pairs(self.awardedItems[trimmedName(nme)]) do
+                    if item == lnk then
+                        awardButton:SetText("|cffff00ffAward|r")
+                    end
+                end
+            end
 
             awardButton:SetCallback("OnClick", function()
                 print("award")
@@ -861,9 +887,11 @@ function NotedLootCouncil:HandleSlashCommands(input)
             self:Debug("finding " .. args)
             self:Print(self:FindItemInInventory(args))
         elseif cmd == "session" and args == "end" then
-            self:StartSession()
-        elseif cmd == "session" then
-            self:StartSession()
+            self:EndAwardingSession()
+        elseif cmd == "session" and args == "start" then
+            self:StartAwardingSession()
+        elseif cmd == "session" and args == "reset" then
+            self:ResetSession()
         else
             LibStub("AceConfigCmd-3.0"):HandleCommand("nlc", "NotedLootCouncil", input)
         end
@@ -918,9 +946,34 @@ function NotedLootCouncil:buildSessionInfo()
     end
 end
 
-function NotedLootCouncil:StartSession()
-    self:SyncItems()
-    self:SendSessionInfo()
-    self:buildSessionInfo()
-    self:OpenCouncilFrame()
+function NotedLootCouncil:StartAwardingSession()
+    if isOnLootCouncil() then
+        if self.sessionRunning == false then
+            self:SyncItems()
+            self:SendSessionInfo()
+            self:buildSessionInfo()
+        end
+        self.sessionRunning = true
+        self:OpenCouncilFrame()
+    else
+        self:Print("You are not on the loot council")
+    end
+end
+
+function NotedLootCouncil:EndAwardingSession()
+    if isOnLootCouncil() then
+        self.sessionRunning = false
+    else
+        self:Print("You are not on the loot council")
+    end
+end
+
+function NotedLootCouncil:ResetSession()
+    if isOnLootCouncil() then
+        self.sessionRunning = false
+        self.sessionInfo = {}
+        self.lootCache = {}
+    else
+        self:Print("You are not on the loot council")
+    end
 end
