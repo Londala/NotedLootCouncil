@@ -151,6 +151,7 @@ function NotedLootCouncil:OnEnable()
     self:RegisterEvent("LOOT_SLOT_CLEARED")
     self:RegisterEvent("LOOT_CLOSED")
     self:RegisterEvent("TRADE_SHOW")
+    self:RegisterEvent("TRADE_CLOSED")
     -- self:RegisterEvent("BAG_UPDATE")
 
     self:Print("|cffff00ff[Noted Loot Council]|r Enabled")
@@ -389,7 +390,7 @@ end
 function NotedLootCouncil:TRADE_SHOW(event)
     self.isTrading = true
     self.tradeTarget = _G.UnitName("NPC")
-    print(tradeTarget)
+    self:Debug("Trading: "..self.tradeTarget)
 
     if self.awardedItems[self.tradeTarget] == nil then
         self:Print("No items to trade "..self.tradeTarget)
@@ -404,6 +405,11 @@ function NotedLootCouncil:TRADE_SHOW(event)
             _G.ClickTradeButton(k)
         end, 0.1)
     end
+end
+
+function NotedLootCouncil:TRADE_CLOSED(event)
+    self.isTrading = false
+    self.tradeTarget = ""
 end
 
 -------------------------------------------------------------------------
