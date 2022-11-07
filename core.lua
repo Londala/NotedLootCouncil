@@ -183,7 +183,6 @@ end
 
 function NotedLootCouncil:parseLootSelectOptions(optsStr)
     self.lootSelectOptions = {}
-    print(optsStr)
     for str in string.gmatch(optsStr, "([^"..",".."]+)") do
         table.insert(self.lootSelectOptions, str:trim())
     end
@@ -355,8 +354,6 @@ function NotedLootCouncil:AwardItem(itemLink, player)
     local chat_type, playerName = getChatType(false, true)
     local msg = ""..itemLink.." awarded to "..trimmedName(player).."."
     -- TODO: Make chat_type 
-    print(msg)
-    print(chat_type)
     SendChatMessage(msg, chat_type, nil, playerName)
 end
 
@@ -385,16 +382,12 @@ end
 -------------------------------------------------------------------------
 
 function NotedLootCouncil:FindItemInInventory(itemLink)
-    print(itemLink)
     local itemName, _ = _G.GetItemInfo(itemLink)
-    print(itemName)
     for bag = 0,4 do
         for slot = 1,_G.GetContainerNumSlots(bag) do
             local item = _G.GetContainerItemLink(bag,slot)
             if item then
-                print(itemLink.." = ".. item)
                 if item:find(itemName) then
-                    print(bag.." "..slot)
                     return bag, slot
                 end
             end
@@ -700,7 +693,6 @@ function NotedLootCouncil:OpenCouncilFrame()
             end
 
             awardButton:SetCallback("OnClick", function()
-                print("award")
                 NotedLootCouncil:AwardItem(lnk, nme)
             end)
 
@@ -906,7 +898,6 @@ function NotedLootCouncil:GetSelectOptions(info)
 end
 
 function NotedLootCouncil:SetSelectOptions(info, newValue)
-    print(newValue)
     self.db.char.selectOptions = newValue
     NotedLootCouncil:parseLootSelectOptions(newValue)
 end
