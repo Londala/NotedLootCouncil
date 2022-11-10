@@ -360,16 +360,26 @@ end
 function NotedLootCouncil:GetVote(msg, sender)
     local sep = "="
     local t={}
+    
     for str in string.gmatch(msg, "([^"..sep.."]+)") do
         table.insert(t, str)
     end
+    for i, v in pairs(self.sessionInfo[t[1]]["selections"]) do
+        self.sessionInfo[t[1]]["selections"][i]["voteSet"][sender] = false
+    end
     self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"][sender] = true
 
-    local votes = 0
-    for i, k in pairs(self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"]) do
-        votes = votes + 1
+    for i, v in pairs(self.sessionInfo[t[1]]["selections"]) do
+        local votes = 0
+        for j, k in pairs(v["voteSet"]) do
+            votes = votes + 1
+        end
+        self.sessionInfo[t[1]]["selections"][i]["votes"] = votes
     end
-    self.sessionInfo[t[1]]["selections"][t[2]]["votes"] = votes
+    -- for i, k in pairs(self.sessionInfo[t[1]]["selections"][t[2]]["voteSet"]) do
+    --     votes = votes + 1
+    -- end
+    -- self.sessionInfo[t[1]]["selections"][t[2]]["votes"] = votes
 end
 
 function NotedLootCouncil:SendSessionInfo()
