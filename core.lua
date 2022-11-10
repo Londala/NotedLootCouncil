@@ -888,15 +888,21 @@ function NotedLootCouncil:HandleSlashCommands(input)
         if cmd == "add" and args ~= "" then
             self:Debug("adding " .. args)
             table.insert(self.lootCache, args)
-        elseif cmd == "find" and args ~= "" then
-            self:Debug("finding " .. args)
-            self:Print(self:FindItemInInventory(args))
+        -- elseif cmd == "find" and args ~= "" then
+        --     self:Debug("finding " .. args)
+        --     self:Print(self:FindItemInInventory(args))
         elseif cmd == "session" and args == "end" then
             self:EndAwardingSession()
         elseif cmd == "session" and args == "start" then
             self:StartAwardingSession()
         elseif cmd == "session" and args == "reset" then
             self:ResetSession()
+        elseif cmd == "council" and args == "add" then
+            self:AddTargetToCouncil()
+        elseif cmd == "council" and args == "remove" then
+            self:RemoveTargetFromCouncil()
+        elseif cmd == "council" then
+            self:ListCouncil()
         else
             LibStub("AceConfigCmd-3.0"):HandleCommand("nlc", "NotedLootCouncil", input)
         end
@@ -980,4 +986,16 @@ function NotedLootCouncil:ResetSession()
     else
         self:Print("You are not on the loot council")
     end
+end
+
+function NotedLootCouncil:AddTargetToCouncil()
+    
+end
+
+function NotedLootCouncil:RemoveTargetFromCouncil()
+
+end
+
+function NotedLootCouncil:ListCouncil()
+
 end
